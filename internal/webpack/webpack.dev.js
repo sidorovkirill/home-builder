@@ -7,13 +7,15 @@ const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
 
+const cwd = process.cwd();
+
 module.exports = require('./webpack.base')({
   mode: 'development',
 
   entry: [
     'react-hot-loader/patch',
     'webpack-hot-middleware/client',
-    path.join(process.cwd(), 'src/index.js'),
+    path.join(cwd, 'src/index.js'),
   ],
 
   output: {
@@ -31,8 +33,8 @@ module.exports = require('./webpack.base')({
     new webpack.HotModuleReplacementPlugin(),
     new HtmlWebpackPlugin({
       inject: true,
-      template: 'src/index.html',
-      favicon: 'src/favicon.ico',
+      template: path.join(cwd, 'src/index.html'),
+      favicon: path.join(cwd, 'src/favicon.ico'),
     }),
     new CircularDependencyPlugin({
       exclude: /node_modules/,

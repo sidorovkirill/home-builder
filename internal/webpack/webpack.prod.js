@@ -14,11 +14,13 @@ const lodashFnMap = new Map(
   Object.keys(lodash).map((k) => [k.toLowerCase(), k])
 );
 
+const cwd = process.cwd();
+
 module.exports = require('./webpack.base')({
   mode: 'production',
 
   // In production, we skip all hot-reloading stuff
-  entry: [path.join(process.cwd(), 'src/index.js')],
+  entry: [path.join(cwd, 'src/index.js')],
 
   // Utilize long-term caching by adding content hashes (not compilation hashes) to compiled assets
   output: {
@@ -75,8 +77,8 @@ module.exports = require('./webpack.base')({
   plugins: [
     // Minify and optimize the index.html
     new HtmlWebpackPlugin({
-      template: 'src/index.html',
-      favicon: 'src/favicon.ico',
+      template: path.join(cwd, 'src/index.html'),
+      favicon: path.join(cwd, 'src/favicon.ico'),
       minify: {
         removeComments: true,
         collapseWhitespace: true,
