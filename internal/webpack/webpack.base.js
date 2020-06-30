@@ -4,6 +4,7 @@
 
 const path = require('path');
 const webpack = require('webpack');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = (options) => ({
   mode: options.mode,
@@ -91,11 +92,19 @@ module.exports = (options) => ({
         NODE_ENV: JSON.stringify(process.env.NODE_ENV),
       },
     }),
+    new CopyPlugin({
+      patterns: [
+        { from: 'public/assets', to: 'assets' },
+      ],
+    }),
   ]),
   resolve: {
     modules: ['node_modules', 'src'],
     extensions: ['.js', '.jsx'],
     mainFields: ['browser', 'jsnext:main', 'main'],
+    alias: {
+      components: path.resolve(process.cwd(), 'src/components'),
+    }
   },
   devtool: options.devtool,
   target: 'web',

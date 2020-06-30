@@ -1,10 +1,9 @@
 import React from 'react';
 import { hot } from 'react-hot-loader/root';
+import Editor from 'components/editor';
 
 const App = () => (
-  <div>
-    <h1>Welcome to Market Frontend</h1>
-  </div>
+  <Editor/>
 );
 
 export default hot(App);
