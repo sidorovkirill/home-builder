@@ -224,10 +224,21 @@ export default function Structure() {
 
     });
 
-    if (!elements) {
-        const model = useLoader(GLTFLoader, "assets/models/elements.glb");
-        setElements(assembleElements(model));
-    }
+  useEffect(() => {
+      const path = 'assets/models/elements.glb';
+      var loader = new GLTFLoader();
+      loader.load(path,
+      (model) => {
+          setElements(assembleElements(model));
+      },
+      (event) => {
+          console.log(event);
+      },
+      (error) => {
+          console.error(error);
+      },
+    );
+  }, []);
 
     return (
         <group ref={group}>
