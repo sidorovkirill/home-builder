@@ -104,6 +104,7 @@ module.exports = (options) => ({
     mainFields: ['browser', 'jsnext:main', 'main'],
     alias: {
       components: path.resolve(process.cwd(), 'src/components'),
+      constants: path.resolve(process.cwd(), 'src/constants'),
     }
   },
   devtool: options.devtool,
