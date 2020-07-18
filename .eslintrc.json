@@ -114,6 +114,10 @@
           ".tsx"
         ]
       },
+      "alias": [
+        ["components", "src/components"],
+        ["constants", "src/constants"]
+      ],
       "babel-module": {}
     }
   }
