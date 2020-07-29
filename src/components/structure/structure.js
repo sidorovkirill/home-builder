@@ -34,7 +34,12 @@ export default function Structure() {
             {elements && structure.columns.map((column) => {
                 const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
                 const mesh = elements[column.element];
-                return <mesh position={pos} geometry={mesh.geometry} material={mesh.material}/>
+                return <mesh
+                  key={`column_${column.id}`}
+                  position={pos}
+                  geometry={mesh.geometry}
+                  material={mesh.material}
+                />
             })}
             {elements && structure.crossbars.map((cb) => {
                 const {columns, type, side, element} = cb;
@@ -49,6 +54,7 @@ export default function Structure() {
                 ];
                 const mesh = elements[element];
                 return <mesh
+                    key={`crossbar_${cb.id}`}
                     position={pos}
                     rotation={config.rotation.map(( deg ) => THREE.Math.degToRad(deg))}
                     geometry={mesh.geometry}
@@ -65,7 +71,6 @@ const assembleElements = (model) => {
             acc[mesh.name] = mesh;
             return acc;
         }, {});
-        console.log('meshes', meshes);
         return {...acc, ...meshes};
     }, {});
 };

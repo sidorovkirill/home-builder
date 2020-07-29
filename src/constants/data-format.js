@@ -72,7 +72,7 @@ export default {
     {
       id: 7,
       columns: [5, 6],
-      type: CrossbarTypes.AGAINST_INNER,
+      type: CrossbarTypes.AGAINST_OUTER,
       side: CrossbarSides.RIGHT,
       element: 'R7',
     },
@@ -196,5 +196,5 @@ export default {
       position: [unitSide / 2, crossbarSide / 2, 0],
       rotation: [0, 90, 0],
     },
-  },
+  }
 };
