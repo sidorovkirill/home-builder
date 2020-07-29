@@ -39,7 +39,6 @@ export default function Editor() {
 }
 
 const setUpCanvas  = ({gl, camera}) => {
-  console.log(gl);
     gl.setSize(window.innerWidth, window.innerHeight);
     camera.lookAt(rotationCenter);
 };

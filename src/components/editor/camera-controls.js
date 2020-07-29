@@ -16,7 +16,6 @@ export default function CameraControls(props) {
 
     useEffect(() => {
         const {center} = props;
-        console.log(center);
         controls.current.target.set(...center);
     }, []);
 
