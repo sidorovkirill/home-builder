@@ -5,7 +5,7 @@ import {OrbitControls} from "three/examples/jsm/controls/OrbitControls";
 
 extend({ OrbitControls });
 
-export default function CameraControls(props) {
+const CameraControls = function(props) {
     const {
         camera,
         gl: { domElement }
@@ -26,3 +26,5 @@ export default function CameraControls(props) {
         />
     );
 };
+
+export default CameraControls;

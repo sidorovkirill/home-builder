@@ -5,7 +5,25 @@ export const CrossbarTypes = {
   AGAINST_INNER: 'AGAINST_INNER',
 };
 
-export const CrossbarSides = {
+export const ConstructionSides = {
   LEFT: 'LEFT',
   RIGHT: 'RIGHT'
+};
+
+export const DirectionTypes = {
+  TOWARD: "TOWARD",
+  AGAINST: "AGAINST"
+};
+
+export const MoveTypes = {
+  MINUS: "MINUS",
+  PLUS: "PLUS"
+};
+
+export const ColumnTypes = {
+  INNER: "INNER",
+  OUTER: "OUTER",
+  ANGLE: "ANGLE",
+  INNER_ANGLE: "INNER_ANGLE",
+  OUTSTANDING: "OUTSTANDING"
 };
