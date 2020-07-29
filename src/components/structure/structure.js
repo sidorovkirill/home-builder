@@ -6,16 +6,12 @@ import {CrossbarTypes, CrossbarSides} from 'constants/model-variables.js';
 import {unitSide, crossbarSide, unitHeight} from 'constants/construction-parameters.js';
 
 export default function Structure() {
-    const group = useRef();
-    const [elements, setElements] = useState(null);
-
-    structure.crossbars.forEach((crossbar, index) => {
-
-    });
+  const group = useRef();
+  const [elements, setElements] = useState(null);
 
   useEffect(() => {
       const path = 'assets/models/elements.glb';
-      var loader = new GLTFLoader();
+      const loader = new GLTFLoader();
       loader.load(path,
       (model) => {
           setElements(assembleElements(model));
