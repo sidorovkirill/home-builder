@@ -105,6 +105,7 @@ module.exports = (options) => ({
     alias: {
       components: path.resolve(process.cwd(), 'src/components'),
       constants: path.resolve(process.cwd(), 'src/constants'),
+      utils: path.resolve(process.cwd(), 'src/utils'),
     }
   },
   devtool: options.devtool,
