@@ -105,6 +105,10 @@ module.exports = (options) => ({
     alias: {
       components: path.resolve(process.cwd(), 'src/components'),
       constants: path.resolve(process.cwd(), 'src/constants'),
+      store: path.resolve(process.cwd(), 'src/store'),
+      utils: path.resolve(process.cwd(), 'src/utils'),
+      reducers: path.resolve(process.cwd(), 'src/reducers'),
+      containers: path.resolve(process.cwd(), 'src/containers'),
       utils: path.resolve(process.cwd(), 'src/utils'),
     }
   },
