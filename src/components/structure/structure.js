@@ -1,21 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+import { useSelector, useDispatch, shallowEqual, batch } from 'react-redux';
 import structure from 'constants/data-format';
 import {
   CrossbarTypes,
   ConstructionSides,
   ColumnTypes,
   DirectionTypes,
-  MoveTypes
+  MoveTypes,
 } from 'constants/model-variables.js';
+import { changeFacesSelection } from 'reducers/structure';
 import { unitSide, crossbarSide, unitHeight } from 'constants/construction-parameters.js';
 import OuterManipulatorFace from 'components/outer-manipulator-face';
 import Сontour from 'utils/contour';
+import FacesManipulator from 'components/faces-manipulator';
+import { changeMovingStatus } from 'reducers/structure';
+import {
+  addToDragPool,
+  clearDragPool,
+} from 'reducers/camera';
+import MultiselectParent from 'components/multiselect-parent'
 
-const Structure = function() {
+const Structure = function(props) {
   const group = useRef();
   const [elements, setElements] = useState(null);
+  const [selectionTexture, setTexture] = useState(null);
 
   useEffect(() => {
     const path = 'assets/models/elements.glb';
@@ -33,44 +43,92 @@ const Structure = function() {
     );
   }, []);
 
-  splitByColumnType(structure.columns);
+  useEffect(() => {
+    const loader = new THREE.TextureLoader();
+    loader.load(
+      // resource URL
+      'assets/textures/selection-texture.png',
+      function(texture) {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.wrapT = THREE.RepeatWrapping;
+        texture.repeat.set(3, 3);
+        setTexture(texture);
+      },
+      undefined,
+      function(err) {
+        console.error('An error happened.');
+      },
+    );
+  }, []);
 
+  const dispatch = useDispatch();
+  const selectedFaces = useSelector(state => state.structure.selectedFaces, shallowEqual);
+  const sceneIsMoving = useSelector(state => state.camera.isMoving, shallowEqual);
+  const distance = useSelector(state => state.camera.distance, shallowEqual);
+
+  function buildOuterFaces() {
+    const height = unitHeight + crossbarSide;
+    const contour = new Сontour(structure.columns);
+    let zAngle = 0;
+    return contour.output.map(({ column, meta }, index) => {
+      let lastIndex = index - 1;
+      if (index === 0) {
+        lastIndex = contour.output.length - 1;
+      }
+      const lastColumn = contour.output[lastIndex].column;
+      if (lastColumn.type === ColumnTypes.ANGLE) {
+        zAngle += 90;
+      } else if (lastColumn.type === ColumnTypes.INNER_ANGLE) {
+        zAngle -= 90;
+      }
+      const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
+      const rotation = [0, zAngle, 0];
+      const name = `outer_manipulator_face_${index}`;
+      return (
+        <OuterManipulatorFace
+          key={name}
+          name={name}
+          id={column.id}
+          selected={selectedFaces.includes(name)}
+          onClick={(id, event) => {
+            console.log('-- onClick --');
+            dispatch(changeFacesSelection(id));
+          }}
+          position={pos}
+          rotation={rotation.map((deg) => THREE.Math.degToRad(deg))}
+          height={height}
+          selectionTexture={selectionTexture}
+        />
+      );
+    });
+  }
+
+  function changeMoveStatusHandler(isMoving) {
+    batch(() => {
+      dispatch(changeMovingStatus(isMoving));
+      if (isMoving) {
+        addToDragPool('faceManipulator');
+      } else {
+        clearDragPool();
+      }
+    });
+  }
+
+  splitByColumnType(structure.columns);
   return (
     <group ref={group}>
       {elements && buildColumns(elements)}
       {elements && buildCrossbars(elements)}
-      {elements && buildOuterFaces()}
+      {elements && <MultiselectParent>
+        {buildOuterFaces(selectedFaces, dispatch, selectionTexture)}
+      </MultiselectParent>}
+      <FacesManipulator
+        scale={distance / 16}
+        onChangeMoveStatus={changeMoveStatusHandler}
+      />
     </group>
   );
 };
-
-function buildOuterFaces() {
-  const height = unitHeight + crossbarSide;
-  const contour = new Сontour(structure.columns);
-  let zAngle = 0;
-  return contour.output.map(({column, meta}, index) => {
-      let lastIndex = index - 1;
-      if(index === 0) {
-        lastIndex = contour.output.length - 1;
-      }
-      const lastColumn = contour.output[lastIndex].column;
-        if (lastColumn.type === ColumnTypes.ANGLE) {
-          zAngle += 90
-        } else if (lastColumn.type === ColumnTypes.INNER_ANGLE) {
-          zAngle -= 90
-        }
-      const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
-      const rotation = [0, zAngle, 0];
-      return (
-        <OuterManipulatorFace
-          key={`outer_manipulator_face_${index}`}
-          position={pos}
-          rotation={rotation.map((deg) => THREE.Math.degToRad(deg))}
-          height={height}
-        />
-        );
-  });
-}
 
 function buildColumns(elements) {
   return structure.columns.map((column) => {

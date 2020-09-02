@@ -109,7 +109,6 @@ module.exports = (options) => ({
       utils: path.resolve(process.cwd(), 'src/utils'),
       reducers: path.resolve(process.cwd(), 'src/reducers'),
       containers: path.resolve(process.cwd(), 'src/containers'),
-      utils: path.resolve(process.cwd(), 'src/utils'),
     }
   },
   devtool: options.devtool,
