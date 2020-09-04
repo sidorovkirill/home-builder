@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useSelector, useDispatch, shallowEqual, batch } from 'react-redux';
-import structure from 'constants/data-format';
 import {
   CrossbarTypes,
   ConstructionSides,
@@ -10,12 +9,15 @@ import {
   DirectionTypes,
   MoveTypes,
 } from 'constants/model-variables.js';
-import { changeFacesSelection } from 'reducers/structure';
-import { unitSide, crossbarSide, unitHeight } from 'constants/construction-parameters.js';
+import {selectFace, dropSelection} from 'actions/structure';
+import {unitSide, crossbarSide, unitHeight} from 'constants/construction-parameters.js';
 import OuterManipulatorFace from 'components/outer-manipulator-face';
 import Сontour from 'utils/contour';
 import FacesManipulator from 'components/faces-manipulator';
-import { changeMovingStatus } from 'reducers/structure';
+import {
+  changeMovingStatus,
+  updateContour
+} from 'reducers/structure';
 import {
   addToDragPool,
   clearDragPool,
@@ -26,6 +28,17 @@ const Structure = function(props) {
   const group = useRef();
   const [elements, setElements] = useState(null);
   const [selectionTexture, setTexture] = useState(null);
+
+  const dispatch = useDispatch();
+  const {
+    selectedFaces,
+    structure: allFloors,
+    contour,
+    floor,
+    isEnriched
+  } = useSelector(state => state.structure, shallowEqual);
+  const {distance, sceneIsMoving} = useSelector(state => state.camera, shallowEqual);
+  const structure = allFloors[floor - 1];
 
   useEffect(() => {
     const path = 'assets/models/elements.glb';
@@ -61,46 +74,45 @@ const Structure = function(props) {
     );
   }, []);
 
-  const dispatch = useDispatch();
-  const selectedFaces = useSelector(state => state.structure.selectedFaces, shallowEqual);
-  const sceneIsMoving = useSelector(state => state.camera.isMoving, shallowEqual);
-  const distance = useSelector(state => state.camera.distance, shallowEqual);
+  useEffect(() => {
+    const contour = new Сontour(structure.columns);
+    dispatch(updateContour(contour.output));
+  }, structure.columns);
 
   function buildOuterFaces() {
-    const height = unitHeight + crossbarSide;
-    const contour = new Сontour(structure.columns);
-    let zAngle = 0;
-    return contour.output.map(({ column, meta }, index) => {
-      let lastIndex = index - 1;
-      if (index === 0) {
-        lastIndex = contour.output.length - 1;
-      }
-      const lastColumn = contour.output[lastIndex].column;
-      if (lastColumn.type === ColumnTypes.ANGLE) {
-        zAngle += 90;
-      } else if (lastColumn.type === ColumnTypes.INNER_ANGLE) {
-        zAngle -= 90;
-      }
-      const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
-      const rotation = [0, zAngle, 0];
-      const name = `outer_manipulator_face_${index}`;
-      return (
-        <OuterManipulatorFace
-          key={name}
-          name={name}
-          id={column.id}
-          selected={selectedFaces.includes(name)}
-          onClick={(id, event) => {
-            console.log('-- onClick --');
-            dispatch(changeFacesSelection(id));
-          }}
-          position={pos}
-          rotation={rotation.map((deg) => THREE.Math.degToRad(deg))}
-          height={height}
-          selectionTexture={selectionTexture}
-        />
-      );
-    });
+    if(isEnriched) {
+      const height = unitHeight + crossbarSide;
+      let zAngle = 0;
+      return contour.map(({ column, meta }, index) => {
+        let lastIndex = index - 1;
+        if (index === 0) {
+          lastIndex = contour.length - 1;
+        }
+        const lastColumn = contour[lastIndex].column;
+        if (lastColumn.type === ColumnTypes.ANGLE) {
+          zAngle += 90;
+        } else if (lastColumn.type === ColumnTypes.INNER_ANGLE) {
+          zAngle -= 90;
+        }
+        const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
+        const rotation = [0, zAngle, 0];
+        const name = `outer_manipulator_face_${index}`;
+        return (
+          <OuterManipulatorFace
+            key={name}
+            name={name}
+            columnid={column.id}
+            selected={selectedFaces.find((face) => face.name === name)}
+            position={pos}
+            rotation={rotation.map((deg) => THREE.Math.degToRad(deg))}
+            height={height}
+            selectionTexture={selectionTexture}
+          />
+        );
+      });
+    } else {
+      return <></>;
+    }
   }
 
   function changeMoveStatusHandler(isMoving) {
@@ -114,12 +126,18 @@ const Structure = function(props) {
     });
   }
 
-  splitByColumnType(structure.columns);
+  splitByColumnType(structure);
   return (
     <group ref={group}>
-      {elements && buildColumns(elements)}
-      {elements && buildCrossbars(elements)}
-      {elements && <MultiselectParent>
+      {elements && buildColumns(elements, structure)}
+      {elements && buildCrossbars(elements, structure)}
+      {elements && <MultiselectParent
+        onClick={(faceNames) => {
+          console.log(faceNames[0]);
+          dispatch(selectFace(faceNames[0]));
+        }}
+        onDropped={() => dispatch(dropSelection())}
+      >
         {buildOuterFaces(selectedFaces, dispatch, selectionTexture)}
       </MultiselectParent>}
       <FacesManipulator
@@ -130,7 +148,7 @@ const Structure = function(props) {
   );
 };
 
-function buildColumns(elements) {
+function buildColumns(elements, structure) {
   return structure.columns.map((column) => {
     const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
     const mesh = elements[column.element];
@@ -143,7 +161,7 @@ function buildColumns(elements) {
   });
 }
 
-function buildCrossbars(elements) {
+function buildCrossbars(elements, structure) {
   return structure.crossbars.map((cb) => {
     const { columns, type, side, element } = cb;
 
@@ -176,8 +194,8 @@ const assembleElements = (model) => {
   }, {});
 };
 
-function splitByColumnType(columns) {
-  return columns.map((column) => {
+function splitByColumnType(structure) {
+  return structure.columns.map((column) => {
     const neighborsUnits = getIntersectionOfUnits(structure.units, column.id);
     //const intersect = intersectionWith(structure.columns, neighbors, (columnPosition, neighborPosition) => isEqual(columnPosition.position, neighborPosition));
     return {

@@ -88,6 +88,7 @@ var OrbitControls = function ( object, domElement ) {
   this.target0 = this.target.clone();
   this.position0 = this.object.position.clone();
   this.zoom0 = this.object.zoom;
+  
 
   //
   // public methods
@@ -335,6 +336,10 @@ var OrbitControls = function ( object, domElement ) {
   var dollyStart = new Vector2();
   var dollyEnd = new Vector2();
   var dollyDelta = new Vector2();
+
+  // For complex events
+  var predictMoveStart = false;
+  var moveStarted = false;
 
   function getAutoRotationAngle() {
 
@@ -925,7 +930,8 @@ var OrbitControls = function ( object, domElement ) {
       scope.domElement.ownerDocument.addEventListener( 'pointermove', onPointerMove, false );
       scope.domElement.ownerDocument.addEventListener( 'pointerup', onPointerUp, false );
 
-      scope.dispatchEvent( startEvent );
+      //scope.dispatchEvent( startEvent );
+      predictMoveStart = true;
 
     }
 
@@ -965,6 +971,11 @@ var OrbitControls = function ( object, domElement ) {
 
     }
 
+    if(predictMoveStart) {
+      scope.dispatchEvent( startEvent );
+      predictMoveStart = false;
+      moveStarted = true;
+    }
   }
 
   function onMouseUp( event ) {
@@ -976,7 +987,10 @@ var OrbitControls = function ( object, domElement ) {
     scope.domElement.ownerDocument.removeEventListener( 'pointermove', onPointerMove, false );
     scope.domElement.ownerDocument.removeEventListener( 'pointerup', onPointerUp, false );
 
-    scope.dispatchEvent( endEvent );
+    if(moveStarted) {
+      scope.dispatchEvent(endEvent);
+      moveStarted = false;
+    }
 
     state = STATE.NONE;
 

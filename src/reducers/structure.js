@@ -1,11 +1,17 @@
 import { createSlice } from '@reduxjs/toolkit'
 import {SelectionActions} from 'constants/actions-variables';
-
+import structure from 'constants/data-format';
 
 const initialState = {
+  structure: [
+    structure,
+  ],
   selectedFaces: [],
+  actualSide: null,
   manipulatorIsMoving: false,
-  shiftOnLastStep: false
+  floor: 1,
+  isEnriched: false,
+  contour: null
 };
 
 const editorSlice = createSlice({
@@ -13,37 +19,30 @@ const editorSlice = createSlice({
   initialState,
   reducers: {
     changeFacesSelection(state, {payload}) {
-      const index = state.selectedFaces.indexOf(payload);
-      if(index > -1) {
-        state.selectedFaces.splice(index, 1);
-      } else {
-        state.selectedFaces.push(payload);
-      }
+      state.selectedFaces = payload;
       return state;
     },
     changeMovingStatus(state, {payload}) {
       state.manipulatorIsMoving = payload;
       return state;
-    }
-  },
-  // extraReducers: {
-  //   globalPointerUp: (state, {payload: store}) => {
-  //     const shiftPinched = store.keyboard.shiftPinched;
-  //     console.log(shiftPinched);
-  //     state.manipulatorIsMoving = false;
-  //     const selectedCount = state.selectedFaces.length;
-  //     if(!shiftPinched){
-  //       state.selectedFaces = [];
-  //     }
-  //     if(!shiftPinched && selectedCount > 1) {
-  //       state.selectedFaces = [state.selectedFaces[selectedCount - 1]];
-  //     }
-  //     state.shiftOnLastStep = shiftPinched;
-  //     return state
-  //   }
-  // }
+    },
+    updateContour(state, {payload: contour}) {
+      state.contour = contour;
+      state.isEnriched = true;
+      return state;
+    },
+    updateActualSide(state, {payload}) {
+      state.actualSide = payload;
+      return state;
+    },
+  }
 });
 
-export const {changeFacesSelection, changeMovingStatus} = editorSlice.actions;
+export const {
+  changeFacesSelection,
+  changeMovingStatus,
+  updateContour,
+  updateActualSide
+} = editorSlice.actions;
 
 export default editorSlice.reducer;

@@ -12,8 +12,6 @@ extend({ OrbitControls });
 
 let distance = 0;
 
-let startCoords = null;
-
 const CameraControls = function(props) {
     const {center, disabled} = props;
     const {
@@ -42,18 +40,16 @@ const CameraControls = function(props) {
         }, false);
         controls.current.addEventListener('start', (event) => {
             console.log("--start move--");
-            startCoords = convertCoordinates(event.target.object.position);
             dispatch(changeMovingStatus(true));
         }, false);
         controls.current.addEventListener('wheel', (event) => {
             console.log("scroll");
         }, false);
         controls.current.addEventListener('end', (event) => {
-            console.log("--end move--");
-            const endCoords = convertCoordinates(event.target.object.position);
-            const moveDistance = getDistance(startCoords, endCoords);
-            console.log('move distance', moveDistance);
-            dispatch(changeMovingStatus(false));
+            setTimeout(() => {
+                console.log("--end move--");
+                dispatch(changeMovingStatus(false));
+            }, 0);
         }, false);
     }, []);
 

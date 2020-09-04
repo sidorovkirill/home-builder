@@ -4,7 +4,7 @@ import { unitSide, crossbarSide, unitHeight } from 'constants/construction-param
 
 const OuterManipulatorFace = function(props) {
   const {
-    id,
+    columnid,
     name,
     position,
     rotation,
@@ -27,8 +27,12 @@ const OuterManipulatorFace = function(props) {
   }, []);
 
   const onClickHandler = (event) => {
+    const payload = {
+      name,
+      columnid
+    };
     if (onClick) {
-      onClick(name, event);
+      onClick(payload, event);
     }
     event.stopPropagation();
   };
@@ -74,7 +78,7 @@ const OuterManipulatorFace = function(props) {
         metalness={0}
       />
     </mesh>
-    <mesh visible={selected} >
+    <mesh visible={!!selected} >
       <planeGeometry
         ref={selectedFace}
         attach="geometry"
