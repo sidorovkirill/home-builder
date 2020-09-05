@@ -133,7 +133,6 @@ const Structure = function(props) {
       {elements && buildCrossbars(elements, structure)}
       {elements && <MultiselectParent
         onClick={(faceNames) => {
-          console.log(faceNames[0]);
           dispatch(selectFace(faceNames[0]));
         }}
         onDropped={() => dispatch(dropSelection())}

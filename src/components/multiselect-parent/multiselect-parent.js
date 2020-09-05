@@ -30,7 +30,7 @@ const MultiselectParent = function(props) {
     raycaster.setFromCamera(getMouseCoords(event), camera);
     const intersects = raycaster.intersectObjects(scene.children,  true);
     const selectedNames = intersects.map((component) => component.object.name).filter((item) => item.length > 0);
-    const targetIntersect = _.intersectionWith(names, selectedNames, (item, selName) => item.name === selName);
+    const targetIntersect = intersectionInOrder(selectedNames, names);
     if(targetIntersect.length > 0) {
       onClick(targetIntersect);
     } else {
@@ -47,4 +47,8 @@ function getMouseCoords( event ) {
   const x = ( event.clientX / window.innerWidth ) * 2 - 1;
   const y = - ( event.clientY / window.innerHeight ) * 2 + 1;
   return new THREE.Vector2(x, y);
+}
+
+function intersectionInOrder(intersects, names) {
+  return intersects.map((intersectionName) => names.find((item) => item.name === intersectionName));
 }

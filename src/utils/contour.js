@@ -48,14 +48,21 @@ export default class Сontour {
     for(let i = 0; i < this.columns.length - 1; i++) {
       const newColumn = this.getNextColumn();
       this.visited.push(newColumn.id);
-      this.output.push({
-        column: newColumn,
-        meta: {
-          direction: this.direction,
-          moveType: this.moveType,
-        }
-      });
+      this.output.push(this.assembleColumnInfo(newColumn));
       this.actualColumn = newColumn;
+    }
+    // Recalculation of first column for avoid wrong initial value
+    this.getNextColumn();
+    this.output[0] = this.assembleColumnInfo(this.output[0].column);
+  }
+
+  assembleColumnInfo(newColumn) {
+    return {
+      column: newColumn,
+      meta: {
+        direction: this.direction,
+        moveType: this.moveType,
+      }
     }
   }
 
