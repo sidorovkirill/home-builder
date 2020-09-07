@@ -19,7 +19,12 @@ const lineParameters = {
 };
 
 const FacesManipulator = function (props) {
-  const {scale, direction, onChangeMoveStatus} = props;
+  const {
+    scale,
+    direction,
+    onChangeMoveStatus,
+    position
+  } = props;
   const face = useRef();
   const line = useRef();
   const [hover, setHover] = useState(false);
@@ -71,18 +76,40 @@ const FacesManipulator = function (props) {
 
   const renderArrowLine = () => {
     const {radius, height, radialSegments} = lineParameters;
+    const {radius: arrrowHeadRadius} = coneParameters;
 
-    return <mesh
-      rotation={[THREE.Math.degToRad(-90), 0, 0]}
-      position={[0, 0, -height / 2]}
-      attach="geometry"
-      ref={line}
-    >
-      <cylinderBufferGeometry
+    return <>
+      <mesh
+        rotation={[THREE.Math.degToRad(-90), 0, 0]}
+        position={[0, 0, -height / 2]}
         attach="geometry"
-        args={[radius, radius, height, radialSegments]}/>
-      <lineBasicMaterial attach="material" color={0xE71322} linewidth={10} />
-    </mesh>
+        ref={line}
+      >
+        <cylinderBufferGeometry
+          attach="geometry"
+          args={[radius, radius, height, radialSegments]}/>
+        {createMaterial()}
+      </mesh>
+      <mesh
+        rotation={[THREE.Math.degToRad(-90), 0, 0]}
+        position={[0, 0, -height / 2]}
+        attach="geometry"
+        ref={line}
+      >
+        <cylinderBufferGeometry
+          attach="geometry"
+          args={[arrrowHeadRadius, arrrowHeadRadius, height, radialSegments]}/>
+        <meshStandardMaterial
+          attach="material"
+          color={0xE71322}
+          side={THREE.DoubleSide}
+          transparent
+          opacity={0}
+          roughness={1}
+          metalness={0}
+        />
+      </mesh>
+    </>
   };
 
   const renderArrowHead = () => {
@@ -111,8 +138,12 @@ const FacesManipulator = function (props) {
     />
   };
 
+  const [x, y, z] = position;
+  console.log(position);
+
   return <group
     ref={group}
+    position={[x, z, y]}
     scale={new THREE.Vector3(scale, scale, scale)}
     onPointerUp={(event) => changeMoveStatus(false, event)}
     onPointerDown={(event) => changeMoveStatus(true, event)}

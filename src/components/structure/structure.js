@@ -126,6 +126,36 @@ const Structure = function(props) {
     });
   }
 
+  function calculateManipulatorPosition() {
+    const activeColumns = structure.columns.filter((item) => selectedFaces.find((sel) => item.id === sel.columnid));
+
+    let minX = 1000;
+    let maxX = 0;
+    let minY = 1000;
+
+    activeColumns.forEach(({position}) => {
+      const [x, y] = position;
+      if(x > maxX) {
+        maxX = x;
+      }
+      if(x < minX) {
+        minX = x;
+      }
+      if(y < minY) {
+        minY = y;
+      }
+    });
+
+    console.log(maxX, minX);
+
+    return [
+      minX * unitSide + ((maxX - minX) + 1) * unitSide / 2, // x
+      - (crossbarSide / 2 + 0.01) + minY * unitSide,             // y
+      unitHeight / 2,                          // z
+    ]
+  }
+
+
   splitByColumnType(structure);
   return (
     <group ref={group}>
@@ -139,10 +169,11 @@ const Structure = function(props) {
       >
         {buildOuterFaces(selectedFaces, dispatch, selectionTexture)}
       </MultiselectParent>}
-      <FacesManipulator
+      {selectedFaces.length > 0 && <FacesManipulator
         scale={distance / 16}
         onChangeMoveStatus={changeMoveStatusHandler}
-      />
+        position={calculateManipulatorPosition()}
+      />}
     </group>
   );
 };
