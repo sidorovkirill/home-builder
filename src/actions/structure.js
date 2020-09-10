@@ -9,12 +9,17 @@ export const selectFace = (newFace) => (dispatch, getState) => {
   const {keyboard, structure, camera} = getState();
   const {shiftPinched, controlPinched} = keyboard;
   const {isMoving} = camera;
-  const {contour, actualSide, selectedFaces: alreadySelected} = structure;
+  const {
+    contour,
+    actualSide,
+    selectedFaces: alreadySelected,
+    manipulatorIsMoving,
+  } = structure;
   let selectedFaces = [...alreadySelected];
   let side = getActualSide(contour, newFace.columnid);
   let resetWasExecute = false;
 
-  if(!isMoving) {
+  if(!isMoving && !manipulatorIsMoving) {
     if ((shiftPinched || controlPinched) && _.isEqual(actualSide, side)) {
       const existedFace = selectedFaces.find((face) => face.name === newFace.name);
       if (existedFace) {
@@ -40,9 +45,10 @@ export const selectFace = (newFace) => (dispatch, getState) => {
 };
 
 export const dropSelection = () => (dispatch, getState) => {
-  const {camera} = getState();
+  const {camera, structure} = getState();
   const {isMoving} = camera;
-  if(!isMoving) {
+  const {manipulatorIsMoving} = structure;
+  if(!isMoving && !manipulatorIsMoving) {
     batch(() => {
       dispatch(changeFacesSelection([]));
       dispatch(updateActualSide(null));

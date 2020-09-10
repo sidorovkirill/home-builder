@@ -53,6 +53,15 @@ const CameraControls = function(props) {
         }, false);
     }, []);
 
+    useEffect(() => {
+        console.log(controls);
+        if(disabled) {
+            controls.current.dispose();
+        } else {
+            controls.current.activate();
+        }
+    }, [disabled]);
+
     return (
         <orbitControls
             ref={controls}

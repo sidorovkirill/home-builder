@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { extend, useThree } from 'react-three-fiber';
-import { DragControls } from 'three/examples/jsm/controls/DragControls';
+import { DragControls } from './drag-controls';
+import { DirectionTypes } from 'constants/model-variables.js';
 
 const faceSize = 1.5;
 const arrowLength = 1.5;
@@ -23,11 +24,17 @@ const FacesManipulator = function (props) {
     scale,
     direction,
     onChangeMoveStatus,
-    position
+    position,
+    rotation,
+    onDragStart,
+    onDrag,
+    onDragEnd
   } = props;
+  const [x, y, z] = position;
   const face = useRef();
   const line = useRef();
   const [hover, setHover] = useState(false);
+  const [isMoved, setMoveStatus] = useState(false);
   const {
     camera,
     gl: { domElement }
@@ -39,27 +46,66 @@ const FacesManipulator = function (props) {
     event.stopPropagation();
   };
 
-  const changeMoveStatus = (isMoved, event) => {
+  const changeMoveStatus = (isMoved) => {
+    setMoveStatus(isMoved);
     onChangeMoveStatus(isMoved);
-    event.stopPropagation();
   };
 
   useEffect(() => {
     const dragControls = new DragControls([group.current], camera, domElement);
     dragControls.transformGroup = true;
     dragControls.enabled = true;
-    dragControls.addEventListener( 'dragstart', function ( event ) {
-      console.log('dragstart', event);
-    } );
-    dragControls.addEventListener( 'drag', function ( event ) {
-      console.log('drag', event.object.position);
-      event.object.position.y = 0;
-      event.object.position.x = 0;
-    } );
-    dragControls.addEventListener( 'dragend', function ( event ) {
-      console.log('dragend', event);
-    } );
-  }, []);
+
+    const onDragStartHandler = (event) => {
+      changeMoveStatus(true, event);
+      onDragStart(event);
+    };
+
+    const onDragHandler = (event) => {
+      const {z: actualY, x: actualX} = event.object.position;
+      console.log(x, y);
+      if(direction === DirectionTypes.TOWARD) {
+        event.object.position.x = x;
+        event.object.position.z = actualY;
+      } else {
+        event.object.position.x = actualX;
+        event.object.position.z = y;
+      }
+      event.object.position.y = z;
+
+      onDrag(calculateDistance(event.object.position), event);
+    };
+
+    const onDragEndHandler = (event) => {
+      event.object.position.x = x;
+      event.object.position.z = y;
+      event.object.position.y = z;
+      setTimeout(() => {
+        changeMoveStatus(false, event);
+      }, 0);
+      onDragEnd(event);
+    };
+
+    dragControls.addEventListener( 'dragstart', onDragStartHandler);
+    dragControls.addEventListener( 'drag', onDragHandler);
+    dragControls.addEventListener( 'dragend', onDragEndHandler);
+
+    return () => {
+      dragControls.removeEventListener( 'dragstart', onDragStartHandler);
+      dragControls.removeEventListener( 'drag', onDragHandler);
+      dragControls.removeEventListener( 'dragend', onDragEndHandler);
+    }
+  }, [x, y, z, direction]);
+
+  const calculateDistance = (newPosition) => {
+    const {x: nx, y: nz, z: ny} = newPosition;
+
+    if(direction === DirectionTypes.TOWARD) {
+      return y - ny;
+    } else {
+      return x - nx;
+    }
+  };
 
   const renderFace = () => {
     return <mesh
@@ -126,27 +172,31 @@ const FacesManipulator = function (props) {
     </mesh>
   };
 
+  const defineOpacity = (isMoved, hover) => {
+    if(isMoved) {
+      return 0;
+    } else {
+      return hover ? 0.8 : 0.5
+    }
+  };
+
   const createMaterial = () => {
     return <meshStandardMaterial
       attach="material"
       color={0xE71322}
       side={THREE.DoubleSide}
       transparent
-      opacity={hover ? 0.8 : 0.5}
+      opacity={defineOpacity(isMoved, hover)}
       roughness={1}
       metalness={0}
     />
   };
 
-  const [x, y, z] = position;
-  console.log(position);
-
   return <group
     ref={group}
     position={[x, z, y]}
+    rotation={[0, THREE.Math.degToRad(rotation), 0]}
     scale={new THREE.Vector3(scale, scale, scale)}
-    onPointerUp={(event) => changeMoveStatus(false, event)}
-    onPointerDown={(event) => changeMoveStatus(true, event)}
     onPointerOver={onHoverHandler}
     onPointerOut={onHoverHandler}
   >

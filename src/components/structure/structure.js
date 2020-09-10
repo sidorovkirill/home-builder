@@ -13,6 +13,8 @@ import {selectFace, dropSelection} from 'actions/structure';
 import {unitSide, crossbarSide, unitHeight} from 'constants/construction-parameters.js';
 import OuterManipulatorFace from 'components/outer-manipulator-face';
 import Сontour from 'utils/contour';
+import {transformRotation} from 'utils/construction';
+import {calculateManipulatorRotation, calculateManipulatorPosition} from 'utils/manipulator-position';
 import FacesManipulator from 'components/faces-manipulator';
 import {
   changeMovingStatus,
@@ -35,7 +37,8 @@ const Structure = function(props) {
     structure: allFloors,
     contour,
     floor,
-    isEnriched
+    isEnriched,
+    actualSide
   } = useSelector(state => state.structure, shallowEqual);
   const {distance, sceneIsMoving} = useSelector(state => state.camera, shallowEqual);
   const structure = allFloors[floor - 1];
@@ -104,7 +107,7 @@ const Structure = function(props) {
             columnid={column.id}
             selected={selectedFaces.find((face) => face.name === name)}
             position={pos}
-            rotation={rotation.map((deg) => THREE.Math.degToRad(deg))}
+            rotation={transformRotation(rotation)}
             height={height}
             selectionTexture={selectionTexture}
           />
@@ -126,35 +129,6 @@ const Structure = function(props) {
     });
   }
 
-  function calculateManipulatorPosition() {
-    const activeColumns = structure.columns.filter((item) => selectedFaces.find((sel) => item.id === sel.columnid));
-
-    let minX = 1000;
-    let maxX = 0;
-    let minY = 1000;
-
-    activeColumns.forEach(({position}) => {
-      const [x, y] = position;
-      if(x > maxX) {
-        maxX = x;
-      }
-      if(x < minX) {
-        minX = x;
-      }
-      if(y < minY) {
-        minY = y;
-      }
-    });
-
-    console.log(maxX, minX);
-
-    return [
-      minX * unitSide + ((maxX - minX) + 1) * unitSide / 2, // x
-      - (crossbarSide / 2 + 0.01) + minY * unitSide,             // y
-      unitHeight / 2,                          // z
-    ]
-  }
-
 
   splitByColumnType(structure);
   return (
@@ -172,7 +146,12 @@ const Structure = function(props) {
       {selectedFaces.length > 0 && <FacesManipulator
         scale={distance / 16}
         onChangeMoveStatus={changeMoveStatusHandler}
-        position={calculateManipulatorPosition()}
+        position={calculateManipulatorPosition(structure.columns, selectedFaces, actualSide)}
+        rotation={actualSide && calculateManipulatorRotation(actualSide)}
+        direction={actualSide && actualSide.direction}
+        onDragStart={() => console.log()}
+        onDrag={(distance) => console.log(distance)}
+        onDragEnd={() => console.log()}
       />}
     </group>
   );
@@ -207,7 +186,7 @@ function buildCrossbars(elements, structure) {
     return <mesh
       key={`crossbar_${cb.id}`}
       position={pos}
-      rotation={config.rotation.map((deg) => THREE.Math.degToRad(deg))}
+      rotation={transformRotation(config.rotation)}
       geometry={mesh.geometry}
       material={mesh.material}
     />;

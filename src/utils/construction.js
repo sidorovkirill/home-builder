@@ -1,3 +1,5 @@
+import * as THREE from 'three';
+
 export function findOuterColumns(crossbars) {
   return crossbars
     .filter((crossbar) => crossbar.type === CrossbarTypes.AGAINST_OUTER || crossbar.type === CrossbarTypes.TOWARDS_OUTER)
@@ -28,3 +30,5 @@ export function createColumnsQueue(outerColumns) {
   }
   return queue;
 }
+
+export const transformRotation = (rotation) => rotation.map((deg) => THREE.Math.degToRad(deg));

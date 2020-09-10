@@ -291,6 +291,19 @@ var OrbitControls = function ( object, domElement ) {
 
   };
 
+  this.activate = function() {
+    scope.domElement.addEventListener( 'contextmenu', onContextMenu, false );
+
+    scope.domElement.addEventListener( 'pointerdown', onPointerDown, false );
+    scope.domElement.addEventListener( 'wheel', onMouseWheel, false );
+
+    scope.domElement.addEventListener( 'touchstart', onTouchStart, false );
+    scope.domElement.addEventListener( 'touchend', onTouchEnd, false );
+    scope.domElement.addEventListener( 'touchmove', onTouchMove, false );
+
+    scope.domElement.addEventListener( 'keydown', onKeyDown, false );
+  };
+
   //
   // internals
   //
@@ -1183,16 +1196,8 @@ var OrbitControls = function ( object, domElement ) {
 
   //
 
-  scope.domElement.addEventListener( 'contextmenu', onContextMenu, false );
 
-  scope.domElement.addEventListener( 'pointerdown', onPointerDown, false );
-  scope.domElement.addEventListener( 'wheel', onMouseWheel, false );
-
-  scope.domElement.addEventListener( 'touchstart', onTouchStart, false );
-  scope.domElement.addEventListener( 'touchend', onTouchEnd, false );
-  scope.domElement.addEventListener( 'touchmove', onTouchMove, false );
-
-  scope.domElement.addEventListener( 'keydown', onKeyDown, false );
+  this.activate();
 
   // make sure element can receive keys.
 
