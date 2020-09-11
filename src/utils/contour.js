@@ -3,7 +3,9 @@ import {
   ColumnTypes,
   DirectionTypes,
   MoveTypes
-} from 'constants/model-variables.js';
+} from 'constants/model-variables';
+
+import {getColumnById, getColumnByPosition} from 'utils/construction';
 
 export default class Сontour {
   constructor(columns) {
@@ -84,7 +86,7 @@ export default class Сontour {
       return nextColumn;
     } else if (this.actualColumn.type === ColumnTypes.OUTER) {
       const nextPosition = this.getNextPositionBySameDirection(this.actualColumn.position, this.direction, this.moveType);
-      return this.getColumnByPosition(nextPosition);
+      return getColumnByPosition(nextPosition, this.columns);
     }
   }
 
@@ -171,15 +173,7 @@ export default class Сontour {
 
   getExistedNeighbours(neighbours) {
     return neighbours
-      .map((item) => this.getColumnByPosition(item))
+      .map((item) => getColumnByPosition(item, this.columns))
       .filter((item) => !!item && !this.visited.includes(item.id));
-  }
-
-  getColumnById(id) {
-    return this.columns.find((column) => column.id == id);
-  }
-
-  getColumnByPosition(position) {
-    return this.columns.find((column) => _.isEqual(column.position, position));
   }
 }

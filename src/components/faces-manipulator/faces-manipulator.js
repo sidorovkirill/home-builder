@@ -63,7 +63,6 @@ const FacesManipulator = function (props) {
 
     const onDragHandler = (event) => {
       const {z: actualY, x: actualX} = event.object.position;
-      console.log(x, y);
       if(direction === DirectionTypes.TOWARD) {
         event.object.position.x = x;
         event.object.position.z = actualY;

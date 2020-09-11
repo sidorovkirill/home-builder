@@ -130,7 +130,6 @@ var DragControls = function ( _objects, _camera, _domElement ) {
 	}
 
 	function onDocumentMouseDown( event ) {
-		console.log(event);
 		event.preventDefault();
 
 		_intersections.length = 0;

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as _ from 'lodash';
 
 export function findOuterColumns(crossbars) {
   return crossbars
@@ -32,3 +33,15 @@ export function createColumnsQueue(outerColumns) {
 }
 
 export const transformRotation = (rotation) => rotation.map((deg) => THREE.Math.degToRad(deg));
+
+export const getUnitByColumn = (columnId, units) => {
+  return units.find(unit => unit.columns.includes(columnId));
+};
+
+export const getColumnById = (id, columns) => {
+  return columns.find((column) => column.id == id);
+};
+
+export const getColumnByPosition = (position, columns) => {
+  return columns.find((column) => _.isEqual(column.position, position));
+};

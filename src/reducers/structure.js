@@ -6,6 +6,7 @@ const initialState = {
   structure: [
     structure,
   ],
+  copy: null,
   selectedFaces: [],
   actualSide: null,
   manipulatorIsMoving: false,
@@ -35,6 +36,23 @@ const editorSlice = createSlice({
       state.actualSide = payload;
       return state;
     },
+    duplicateStructure(state) {
+      state.copy = state.structure;
+      return state;
+    },
+    applyStructureChanges(state) {
+      state.copy = null;
+      return state;
+    },
+    rejectStructureChanges(state) {
+      state.structure = state.copy;
+      state.copy = null;
+      return state;
+    },
+    updateStructure(state, {payload}) {
+      state.structure = payload;
+      return state;
+    }
   }
 });
 
@@ -42,7 +60,11 @@ export const {
   changeFacesSelection,
   changeMovingStatus,
   updateContour,
-  updateActualSide
+  updateActualSide,
+  duplicateStructure,
+  applyStructureChanges,
+  rejectStructureChanges,
+  updateStructure
 } = editorSlice.actions;
 
 export default editorSlice.reducer;

@@ -18,14 +18,6 @@ const cameraSlice = createSlice({
     changeMovingStatus(state, {payload}) {
       state.isMoving = payload;
       return state;
-    },
-    addToDragPool(state, {payload}) {
-      state.dragPool.push(payload);
-      return state;
-    },
-    clearDragPool(state) {
-      state.dragPool = [];
-      return state;
     }
   }
 });

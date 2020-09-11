@@ -16,6 +16,7 @@
   },
   "pre-commit": "lint:staged",
   "dependencies": {
+    "@hot-loader/react-dom": "^16.13.0",
     "@reduxjs/toolkit": "^1.4.0",
     "@turf/center-of-mass": "^6.0.1",
     "connected-react-router": "^6.8.0",

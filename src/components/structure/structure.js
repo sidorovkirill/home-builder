@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { useSelector, useDispatch, shallowEqual, batch } from 'react-redux';
+import * as _ from 'lodash';
 import {
   CrossbarTypes,
   ConstructionSides,
@@ -9,38 +10,50 @@ import {
   DirectionTypes,
   MoveTypes,
 } from 'constants/model-variables.js';
-import {selectFace, dropSelection} from 'actions/structure';
-import {unitSide, crossbarSide, unitHeight} from 'constants/construction-parameters.js';
+import { selectFace, dropSelection } from 'actions/structure';
+import { unitSide, crossbarSide, unitHeight } from 'constants/construction-parameters.js';
 import OuterManipulatorFace from 'components/outer-manipulator-face';
 import Сontour from 'utils/contour';
-import {transformRotation} from 'utils/construction';
-import {calculateManipulatorRotation, calculateManipulatorPosition} from 'utils/manipulator-position';
+import {
+  transformRotation,
+  getUnitByColumn
+} from 'utils/construction';
+import {
+  calculateManipulatorRotation,
+  calculateManipulatorPosition
+} from 'utils/manipulator-position';
+import {
+  getColumnById,
+  getColumnByPosition
+} from 'utils/construction';
 import FacesManipulator from 'components/faces-manipulator';
 import {
   changeMovingStatus,
-  updateContour
+  updateContour,
+  duplicateStructure,
+  applyStructureChanges,
+  rejectStructureChanges,
+  updateStructure
 } from 'reducers/structure';
-import {
-  addToDragPool,
-  clearDragPool,
-} from 'reducers/camera';
-import MultiselectParent from 'components/multiselect-parent'
+import MultiselectParent from 'components/multiselect-parent';
 
 const Structure = function(props) {
   const group = useRef();
   const [elements, setElements] = useState(null);
   const [selectionTexture, setTexture] = useState(null);
+  const [manipulatorOffset, setManipulatorOffset] = useState(0);
 
   const dispatch = useDispatch();
   const {
     selectedFaces,
     structure: allFloors,
+    copy: structureCopy,
     contour,
     floor,
     isEnriched,
-    actualSide
+    actualSide,
   } = useSelector(state => state.structure, shallowEqual);
-  const {distance, sceneIsMoving} = useSelector(state => state.camera, shallowEqual);
+  const { distance, sceneIsMoving } = useSelector(state => state.camera, shallowEqual);
   const structure = allFloors[floor - 1];
 
   useEffect(() => {
@@ -78,12 +91,43 @@ const Structure = function(props) {
   }, []);
 
   useEffect(() => {
+    console.log('recalculate columns');
     const contour = new Сontour(structure.columns);
     dispatch(updateContour(contour.output));
-  }, structure.columns);
+  }, [structure.columns]);
+
+  useEffect(() => {
+    if(manipulatorOffset !== 0) {
+      console.log(selectedFaces);
+      console.log(actualSide);
+      console.log(manipulatorOffset);
+      const copy = _.cloneDeep(structureCopy);
+      const sign = manipulatorOffset / Math.abs(manipulatorOffset);
+      selectedFaces.forEach((face) => {
+        const unit = getUnitByColumn(face.columnid, structure.units);
+        if (unit) {
+          const [initialColumnId] = unit.columns;
+          const column = getColumnById(initialColumnId, structure.columns);
+
+          for(let i = 1; i < Math.abs(manipulatorOffset); i++) {
+            const newColumn = _.clone(column);
+            const [x, y] = newColumn.position;
+            if(actualSide.direction === DirectionTypes.TOWARD) {
+              newColumn.position = [x, y - i * sign];
+            } else {
+              newColumn.position = [x - i * sign, y];
+            }
+            copy[floor - 1].columns.push(newColumn);
+          }
+        }
+        console.log('unit', unit);
+      });
+      dispatch(updateStructure(copy));
+    }
+  }, [manipulatorOffset]);
 
   function buildOuterFaces() {
-    if(isEnriched) {
+    if (isEnriched) {
       const height = unitHeight + crossbarSide;
       let zAngle = 0;
       return contour.map(({ column, meta }, index) => {
@@ -119,18 +163,26 @@ const Structure = function(props) {
   }
 
   function changeMoveStatusHandler(isMoving) {
-    batch(() => {
-      dispatch(changeMovingStatus(isMoving));
-      if (isMoving) {
-        addToDragPool('faceManipulator');
-      } else {
-        clearDragPool();
-      }
-    });
+    dispatch(changeMovingStatus(isMoving));
   }
 
+  const onFaceManipulation = (offset) => {
+    let newOffset = Math.ceil(Math.abs(offset)) * (offset < 0 ? -1 : 1);
+    if (manipulatorOffset !== newOffset) {
+      setManipulatorOffset(newOffset);
+    }
+  };
 
-  splitByColumnType(structure);
+  const onManipulationStart = () => {
+    dispatch(duplicateStructure());
+  };
+
+  const onManipulationEnd = () => {
+    dispatch(applyStructureChanges());
+    setManipulatorOffset(0);
+  };
+
+  // splitByColumnType(structure);
   return (
     <group ref={group}>
       {elements && buildColumns(elements, structure)}
@@ -149,9 +201,9 @@ const Structure = function(props) {
         position={calculateManipulatorPosition(structure.columns, selectedFaces, actualSide)}
         rotation={actualSide && calculateManipulatorRotation(actualSide)}
         direction={actualSide && actualSide.direction}
-        onDragStart={() => console.log()}
-        onDrag={(distance) => console.log(distance)}
-        onDragEnd={() => console.log()}
+        onDragStart={onManipulationStart}
+        onDrag={onFaceManipulation}
+        onDragEnd={onManipulationEnd}
       />}
     </group>
   );
