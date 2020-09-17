@@ -12,12 +12,13 @@ const OuterManipulatorFace = function(props) {
     onClick,
     selected,
     selectionTexture,
+    selectionDisabled
   } = props;
   const hoveredFace = useRef();
   const selectedFace = useRef();
   const xOffset = unitSide / 2;
   const zOffset = height / 2;
-  const yOffset = -crossbarSide / 2 - 0.005;
+  const yOffset = crossbarSide / 2 + 0.005;
 
   const [hover, setHover] = useState(false);
 
@@ -43,10 +44,15 @@ const OuterManipulatorFace = function(props) {
   };
 
   const getOpacity = () => {
-    if (hover) {
-      return 0.5;
-    } if(selected) {
-      return 0;
+    if(!selectionDisabled) {
+      if (hover) {
+        return 0.5;
+      }
+      if (selected) {
+        return 0;
+      } else {
+        return 0.2;
+      }
     } else {
       return 0.2;
     }

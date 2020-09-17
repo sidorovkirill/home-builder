@@ -1,5 +1,9 @@
 import * as THREE from 'three';
 import * as _ from 'lodash';
+import {
+  DirectionTypes,
+  MoveTypes,
+} from 'constants/model-variables.js';
 
 export function findOuterColumns(crossbars) {
   return crossbars
@@ -34,8 +38,27 @@ export function createColumnsQueue(outerColumns) {
 
 export const transformRotation = (rotation) => rotation.map((deg) => THREE.Math.degToRad(deg));
 
-export const getUnitByColumn = (columnId, units) => {
-  return units.find(unit => unit.columns.includes(columnId));
+export const getUnitByColumn = (columnId, side, units) => {
+  let index = undefined;
+  const {direction, moveType} = side;
+  if(direction === DirectionTypes.TOWARD) {
+    if(moveType === MoveTypes.MINUS){
+      index = 0;
+    } else {
+      index = 2;
+    }
+  } else {
+    if(moveType === MoveTypes.MINUS){
+      index = 3;
+    } else {
+      index = 1;
+    }
+  }
+  console.log(index);
+  return units.find(unit => {
+    console.log(unit.columns[index], columnId);
+    return unit.columns[index] === columnId
+  });
 };
 
 export const getColumnById = (id, columns) => {

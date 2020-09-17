@@ -7,6 +7,8 @@ import {
 
 import {getColumnById, getColumnByPosition} from 'utils/construction';
 
+const angleSet = [ColumnTypes.ANGLE, ColumnTypes.INNER_ANGLE];
+
 export default class Сontour {
   constructor(columns) {
     if(this.allColumnIsTyped(columns)) {
@@ -16,8 +18,8 @@ export default class Сontour {
     }
     this.direction = DirectionTypes.AGAINST;
     this.moveType = MoveTypes.PLUS;
-    this.actualColumn = this.columns[0];
-    this.visited = [this.actualColumn.id];
+    this.actualColumn = null;
+    this.visited = [];
     this.output = [];
 
     this.setUp();
@@ -36,6 +38,7 @@ export default class Сontour {
 
   setUp() {
     this.actualColumn = this.getStartColumn();
+    console.log('Start Column', this.actualColumn);
     this.direction = this.getDirectionOfColumn(this.actualColumn);
   }
 
@@ -78,10 +81,21 @@ export default class Сontour {
   }
 
   getNextColumn() {
-    if ([ColumnTypes.ANGLE, ColumnTypes.INNER_ANGLE].includes(this.actualColumn.type)) {
+    if (angleSet.includes(this.actualColumn.type)) {
       this.direction = this.getAnotherDirection();
       const neighbours = this.getNeighboursByDirection(this.actualColumn.position, this.direction);
-      const nextColumn = this.getExistedNeighbours(neighbours)[0];
+      const variants = this.getExistedNeighbours(neighbours);
+      let nextColumn = variants[0];
+      if(variants.length > 1) {
+        nextColumn = variants
+          .find((column) => this.getDirectionOfColumn(column) === this.direction || angleSet.includes(column.type));
+      }
+
+      console.log("-----------------------------------");
+      console.log('actual', this.actualColumn);
+      console.log(this.direction, this.moveType);
+      console.log('next', variants);
+
       this.moveType = this.getMoveType(this.actualColumn.position, nextColumn.position, this.direction);
       return nextColumn;
     } else if (this.actualColumn.type === ColumnTypes.OUTER) {
@@ -150,15 +164,10 @@ export default class Сontour {
   }
 
   getStartColumn() {
-    let min = this.columns[Math.ceil(this.columns.length / 2)];
-    this.columns.forEach((column) => {
-      const [minPosX, minPosY] = min.position;
-      const [minActX, minActY] = column.position;
-      if ((minActX < minPosX && minActY <= minPosY) || (minActX <= minPosX && minActY < minPosY)) {
-        min = column;
-      }
-    });
-    return min;
+    const minY = Math.min(...this.columns.map(({position: [x, y]}) => y));
+    const bottomColumns =  this.columns.filter(({position: [x, y]}) => y === minY);
+    const minX = Math.min(...bottomColumns.map(({position: [x, y]}) => x));
+    return this.columns.find(({position: [x, y]}) => x === minX && y === minY);
   }
 
   getDirectionOfColumn(column) {

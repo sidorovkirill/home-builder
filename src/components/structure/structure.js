@@ -11,6 +11,7 @@ import {
   MoveTypes,
 } from 'constants/model-variables.js';
 import { selectFace, dropSelection } from 'actions/structure';
+import { changeFacesSelection } from 'reducers/structure';
 import { unitSide, crossbarSide, unitHeight } from 'constants/construction-parameters.js';
 import OuterManipulatorFace from 'components/outer-manipulator-face';
 import Сontour from 'utils/contour';
@@ -42,6 +43,8 @@ const Structure = function(props) {
   const [elements, setElements] = useState(null);
   const [selectionTexture, setTexture] = useState(null);
   const [manipulatorOffset, setManipulatorOffset] = useState(0);
+  const [newColumnsRaw, setNewColumnsRaw] = useState(null);
+  const [localSelectedFaces, setLocalSelectedFaces] = useState([]);
 
   const dispatch = useDispatch();
   const {
@@ -52,6 +55,7 @@ const Structure = function(props) {
     floor,
     isEnriched,
     actualSide,
+    manipulatorIsMoving,
   } = useSelector(state => state.structure, shallowEqual);
   const { distance, sceneIsMoving } = useSelector(state => state.camera, shallowEqual);
   const structure = allFloors[floor - 1];
@@ -93,49 +97,139 @@ const Structure = function(props) {
   useEffect(() => {
     console.log('recalculate columns');
     const contour = new Сontour(structure.columns);
+    let newSelection = null;
+    if(selectedFaces.length > 0 && newColumnsRaw) {
+      const newColumnIDs = newColumnsRaw.map((col) => col.id);
+      const newColumns = contour.output.filter((contourCol) => newColumnIDs.includes(contourCol.column.id));
+      newSelection = newColumns
+        .filter(({meta}) => _.isEqual(meta, actualSide))
+        .map(({column}) => ({name: `outer_manipulator_face_${column.id}`, columnid: column.id}));
+      console.log(newSelection);
+      setNewColumnsRaw(null);
+      setLocalSelectedFaces(newSelection);
+    }
     dispatch(updateContour(contour.output));
   }, [structure.columns]);
+
+  useEffect(() => {
+    if(manipulatorIsMoving) {
+      setLocalSelectedFaces(selectedFaces);
+    } else {
+      dispatch(changeFacesSelection(localSelectedFaces));
+    }
+  }, [manipulatorIsMoving]);
 
   useEffect(() => {
     if(manipulatorOffset !== 0) {
       console.log(selectedFaces);
       console.log(actualSide);
       console.log(manipulatorOffset);
-      const copy = _.cloneDeep(structureCopy);
-      const sign = manipulatorOffset / Math.abs(manipulatorOffset);
-      selectedFaces.forEach((face) => {
-        const unit = getUnitByColumn(face.columnid, structure.units);
-        if (unit) {
-          const [initialColumnId] = unit.columns;
-          const column = getColumnById(initialColumnId, structure.columns);
+      const newUnitsCoordinates = selectedFaces.reduce((acc, face) => {
+        const units = makeNewUnits(face);
+        return [...acc, ...units];
+      }, []);
+      console.log(newUnitsCoordinates);
 
-          for(let i = 1; i < Math.abs(manipulatorOffset); i++) {
-            const newColumn = _.clone(column);
-            const [x, y] = newColumn.position;
-            if(actualSide.direction === DirectionTypes.TOWARD) {
-              newColumn.position = [x, y - i * sign];
-            } else {
-              newColumn.position = [x - i * sign, y];
-            }
-            copy[floor - 1].columns.push(newColumn);
-          }
-        }
-        console.log('unit', unit);
-      });
-      dispatch(updateStructure(copy));
+      const clone = _.cloneDeep(structureCopy);
+      const clonedStructure = clone[floor - 1];
+
+      const [columns, units, newColumns] = buildColumnsByUnits(
+        newUnitsCoordinates,
+        clonedStructure.units,
+        clonedStructure.columns
+      );
+      setNewColumnsRaw(newColumns);
+      console.log('newColumnsRaw', newColumnsRaw);
+      clonedStructure.columns = splitByColumnType(columns, units);
+      clonedStructure.units = units;
+
+      console.log(clonedStructure);
+      dispatch(updateStructure(clone));
     }
   }, [manipulatorOffset]);
+
+  const buildColumnsByUnits = (newUnitsCoordinates, oldUnits, oldColumns) => {
+    const columns = oldColumns;
+    const newColumns = [];
+    const units = oldUnits;
+    newUnitsCoordinates.forEach((newUnitColumns) => {
+      const columnsIDs = newUnitColumns.map((position) => {
+        const column = getColumnByPosition(position, columns);
+        if(!column) {
+          const newColumn = createColumn(columns.length, position);
+          columns.push(newColumn);
+          newColumns.push(newColumn);
+          return newColumn.id;
+        } else {
+          return column.id;
+        }
+      });
+      units.push(createUnit(units.length, columnsIDs));
+    });
+
+    return [columns, units, newColumns];
+  };
+
+  const recalculateSelection = (newColumns) => {
+    if(selectedFaces.length > 0) {
+      newColumns.forEach((unit) => {
+
+      });
+    };
+  };
+
+  const createUnit = (id, columnsIDs) => ({
+    id,
+    columns: columnsIDs
+  });
+
+  const createColumn = (id, position) => ({
+    id: id,
+    position,
+    element: 'K',
+    type: null
+  });
+
+  const makeNewUnits = (face) => {
+    const unit = getUnitByColumn(face.columnid, actualSide, structure.units);
+    console.log('unit', unit);
+    if (unit) {
+      const [initialColumnId] = unit.columns;
+      const column = getColumnById(initialColumnId, structure.columns);
+      let newUnits = [];
+
+      for(let i = 1; i < Math.abs(manipulatorOffset) + 1; i++) {
+        newUnits.push(calculateUnit(column, i));
+      }
+
+      return newUnits;
+    }
+  };
+
+  const calculateUnit = (column, offset) => {
+    const sign = manipulatorOffset / Math.abs(manipulatorOffset);
+    let baseColumn = null;
+    const [x, y] = column.position;
+    if(actualSide.direction === DirectionTypes.TOWARD) {
+      baseColumn = [x, y - offset * sign];
+    } else {
+      baseColumn = [x - offset * sign, y];
+    }
+    return createUnitColumnsPositions(baseColumn);
+  };
+
+  const createUnitColumnsPositions = (baseColumnPosition) => {
+    const [x, y] = baseColumnPosition;
+    return [baseColumnPosition, [x, y + 1], [x + 1, y + 1], [x + 1, y]];
+  };
 
   function buildOuterFaces() {
     if (isEnriched) {
       const height = unitHeight + crossbarSide;
-      let zAngle = 0;
+      let zAngle = 180;
       return contour.map(({ column, meta }, index) => {
-        let lastIndex = index - 1;
-        if (index === 0) {
-          lastIndex = contour.length - 1;
-        }
-        const lastColumn = contour[lastIndex].column;
+        const lastColumn = contour[index].column;
+        const nextColumn = contour[index === contour.length - 1 ? 0 : index + 1].column;
         if (lastColumn.type === ColumnTypes.ANGLE) {
           zAngle += 90;
         } else if (lastColumn.type === ColumnTypes.INNER_ANGLE) {
@@ -143,13 +237,14 @@ const Structure = function(props) {
         }
         const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
         const rotation = [0, zAngle, 0];
-        const name = `outer_manipulator_face_${index}`;
+        const name = `outer_manipulator_face_${nextColumn.id}`;
         return (
           <OuterManipulatorFace
             key={name}
             name={name}
-            columnid={column.id}
-            selected={selectedFaces.find((face) => face.name === name)}
+            selectionDisabled={manipulatorIsMoving}
+            columnid={nextColumn.id}
+            selected={(manipulatorIsMoving ? localSelectedFaces : selectedFaces).find((face) => face.name === name)}
             position={pos}
             rotation={transformRotation(rotation)}
             height={height}
@@ -255,9 +350,9 @@ const assembleElements = (model) => {
   }, {});
 };
 
-function splitByColumnType(structure) {
-  return structure.columns.map((column) => {
-    const neighborsUnits = getIntersectionOfUnits(structure.units, column.id);
+function splitByColumnType(columns, units) {
+  return columns.map((column) => {
+    const neighborsUnits = getIntersectionOfUnits(units, column.id);
     //const intersect = intersectionWith(structure.columns, neighbors, (columnPosition, neighborPosition) => isEqual(columnPosition.position, neighborPosition));
     return {
       ...column,

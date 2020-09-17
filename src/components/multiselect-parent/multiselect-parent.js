@@ -19,7 +19,7 @@ const MultiselectParent = function(props) {
       name: component.props.name,
       columnid: component.props.columnid
     }));
-  }, props.children);
+  }, [props.children]);
 
   useEffect(() => {
     domElement.addEventListener('click', clickHandler);
