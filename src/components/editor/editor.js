@@ -102,7 +102,7 @@ function Loading() {
 }
 
 function calculateCenterOfMass() {
-  const contour = new Сontour(structure.columns);
+  const contour = new Сontour(structure.columns, structure.units);
   let outerCoordinates = contour.output.map(({ column, meta }, index) => column.position);
 
   outerCoordinates = [...outerCoordinates, outerCoordinates[0]];

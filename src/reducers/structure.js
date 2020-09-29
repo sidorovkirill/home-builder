@@ -52,6 +52,10 @@ const editorSlice = createSlice({
     updateStructure(state, {payload}) {
       state.structure = payload;
       return state;
+    },
+    updateCrossbars(state, {payload}) {
+      state.structure[state.floor - 1].crossbars1 = payload;
+      return state;
     }
   }
 });
@@ -64,7 +68,8 @@ export const {
   duplicateStructure,
   applyStructureChanges,
   rejectStructureChanges,
-  updateStructure
+  updateStructure,
+  updateCrossbars
 } = editorSlice.actions;
 
 export default editorSlice.reducer;

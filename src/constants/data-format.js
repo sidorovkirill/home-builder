@@ -1,4 +1,10 @@
-import {CrossbarTypes, ConstructionSides, ColumnTypes, DirectionTypes} from 'constants/model-variables.js';
+import {
+  CrossbarTypes,
+  ConstructionSides,
+  ColumnTypes,
+  DirectionTypes,
+  MoveTypes,
+} from 'constants/model-variables.js';
 import {unitSide, crossbarSide, unitHeight} from 'constants/construction-parameters.js';
 
 export default {
@@ -29,6 +35,7 @@ export default {
     {id: 6, columns: [8, 12, 13, 9]},
     {id: 7, columns: [9, 13, 14, 10]},
   ],
+  crossbars1: [],
   crossbars: [
     {
       id: 0,
@@ -211,6 +218,32 @@ export default {
     },
     [`${CrossbarTypes.AGAINST_INNER}_${ConstructionSides.RIGHT}`]: {
       position: [unitSide / 2, crossbarSide / 2, 0],
+      rotation: [0, 90, 0],
+    },
+  },
+  transforms1: {
+    [`${DirectionTypes.AGAINST}_${MoveTypes.PLUS}_${ColumnTypes.OUTER}`]: {
+      position: [0, crossbarSide / 2, unitSide / 2],
+      rotation: [0, 0, 0],
+    },
+    [`${DirectionTypes.AGAINST}_${MoveTypes.MINUS}_${ColumnTypes.OUTER}`]: {
+      position: [0, crossbarSide / 2, unitSide / 2],
+      rotation: [0, 0, 180],
+    },
+    [`${DirectionTypes.AGAINST}_${MoveTypes.PLUS}_${ColumnTypes.INNER}`]: {
+      position: [0, crossbarSide / 2, - unitSide / 2],
+      rotation: [0, 0, 0],
+    },
+    [`${DirectionTypes.TOWARD}_${MoveTypes.PLUS}_${ColumnTypes.OUTER}`]: {
+      position: [unitSide / 2, crossbarSide / 2, 0],
+      rotation: [0, 90, 180],
+    },
+    [`${DirectionTypes.TOWARD}_${MoveTypes.MINUS}_${ColumnTypes.OUTER}`]: {
+      position: [unitSide / 2, crossbarSide / 2, 0],
+      rotation: [0, 90, 0],
+    },
+    [`${DirectionTypes.TOWARD}_${MoveTypes.PLUS}_${ColumnTypes.INNER}`]: {
+      position: [ - unitSide / 2, crossbarSide / 2, 0],
       rotation: [0, 90, 0],
     },
   },

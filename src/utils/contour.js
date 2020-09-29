@@ -5,17 +5,22 @@ import {
   MoveTypes
 } from 'constants/model-variables';
 
-import {getColumnById, getColumnByPosition} from 'utils/construction';
+import {
+  getColumnById,
+  getColumnByPosition,
+  getUnitsByColumn,
+} from 'utils/construction';
 
 const angleSet = [ColumnTypes.ANGLE, ColumnTypes.INNER_ANGLE];
 
 export default class Сontour {
-  constructor(columns) {
+  constructor(columns, units) {
     if(this.allColumnIsTyped(columns)) {
       this.columns = columns.filter((column) => [ColumnTypes.OUTER, ColumnTypes.ANGLE, ColumnTypes.INNER_ANGLE].includes(column.type));
     } else {
       throw Error('All of columns should be typed');
     }
+    this.units = units;
     this.direction = DirectionTypes.AGAINST;
     this.moveType = MoveTypes.PLUS;
     this.actualColumn = null;
@@ -38,7 +43,6 @@ export default class Сontour {
 
   setUp() {
     this.actualColumn = this.getStartColumn();
-    console.log('Start Column', this.actualColumn);
     this.direction = this.getDirectionOfColumn(this.actualColumn);
   }
 
@@ -88,7 +92,15 @@ export default class Сontour {
       let nextColumn = variants[0];
       if(variants.length > 1) {
         nextColumn = variants
-          .find((column) => this.getDirectionOfColumn(column) === this.direction || angleSet.includes(column.type));
+          .find((column) => {
+            if(angleSet.includes(column.type)) {
+              return this.getCountOfContiguousUnits(this.actualColumn, column) < 2;
+            } else {
+              return this.getDirectionOfColumn(column) === this.direction;
+            }
+            }
+          );
+
       }
 
       console.log("-----------------------------------");
@@ -178,6 +190,10 @@ export default class Сontour {
     } else if (this.getExistedNeighbours(againstNeighbours).length > 0) {
       return DirectionTypes.AGAINST
     }
+  }
+
+  getCountOfContiguousUnits(columnA, columnB) {
+    return _.intersectionBy(getUnitsByColumn(columnA.id, this.units), getUnitsByColumn(columnB.id, this.units)).length;
   }
 
   getExistedNeighbours(neighbours) {

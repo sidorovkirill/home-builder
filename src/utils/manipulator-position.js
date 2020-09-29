@@ -9,6 +9,7 @@ const offsetFromManipulationFaces = 0.01;
 
 export const calculateManipulatorPosition = (columns, selectedFaces, actualSide) => {
   if (actualSide) {
+    console.log('selectedFaces', selectedFaces);
     const activeColumns = columns.filter((item) => selectedFaces.find((sel) => item.id === sel.columnid));
     const { direction, moveType } = actualSide;
 
