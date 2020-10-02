@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import {SelectionActions} from 'constants/actions-variables';
+import { SelectionActions } from 'constants/actions-variables';
 import structure from 'constants/data-format';
 
 const initialState = {
@@ -56,6 +56,20 @@ const editorSlice = createSlice({
     updateCrossbars(state, {payload}) {
       state.structure[state.floor - 1].crossbars1 = payload;
       return state;
+    },
+    addFloor(state) {
+      state = JSON.parse(JSON.stringify(state));
+      const newFloor = state.floor + 1;
+      console.log('newFloor', newFloor);
+      console.log('newFloor', state, state.structure, state.structure[state.floor - 1]);
+      state.structure[newFloor - 1] = state.structure[state.floor - 1];
+      state.selectedFaces = [];
+      state.floor = newFloor;
+      return state
+    },
+    choseFloor(state, {payload}) {
+      console.log(payload);
+      state.floor = payload;
     }
   }
 });
@@ -69,7 +83,9 @@ export const {
   applyStructureChanges,
   rejectStructureChanges,
   updateStructure,
-  updateCrossbars
+  updateCrossbars,
+  addFloor,
+  choseFloor
 } = editorSlice.actions;
 
 export default editorSlice.reducer;

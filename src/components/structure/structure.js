@@ -102,7 +102,7 @@ const Structure = function(props) {
 
   useEffect(() => {
     if(!manipulatorIsMoving && actualSide) {
-      setManipulatorPosition(calculateManipulatorPosition(structure.columns, selectedFaces, actualSide));
+      setManipulatorPosition(calculateManipulatorPosition(structure.columns, selectedFaces, actualSide, floor));
       setManipulatorRotation(calculateManipulatorRotation(actualSide));
     }
   }, [selectedFaces, actualSide, manipulatorIsMoving]);
@@ -439,7 +439,11 @@ const Structure = function(props) {
         } else if (lastColumn.type === ColumnTypes.INNER_ANGLE) {
           zAngle -= 90;
         }
-        const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
+        const pos = [
+          unitSide * column.position[0],
+          (unitHeight + crossbarSide) * (floor - 1),
+          unitSide * column.position[1]
+        ];
         const rotation = [0, zAngle, 0];
         const name = `outer_manipulator_face_${nextColumn.id}`;
         return (
@@ -483,9 +487,9 @@ const Structure = function(props) {
 
   return (
     <group ref={group}>
-      {elements && buildColumns(elements, structure)}
-      {/*elements && buildCrossbars(elements, structure)*/}
-      {elements && buildCrossbars1(elements, structure)}
+      {elements &&
+      allFloors.slice(0, floor).map((structure, index) =>
+        [...buildColumns(elements, structure, index), ...buildCrossbars(elements, structure, index)])}
       {elements && <MultiselectParent
         onClick={(faceNames) => {
           dispatch(selectFace(faceNames[0]));
@@ -508,9 +512,13 @@ const Structure = function(props) {
   );
 };
 
-function buildColumns(elements, structure) {
+function buildColumns(elements, structure, index) {
   return structure.columns.map((column) => {
-    const pos = [unitSide * column.position[0], 0, unitSide * column.position[1]];
+    const pos = [
+      unitSide * column.position[0],
+      index * (unitHeight + crossbarSide),
+      unitSide * column.position[1]
+    ];
     const mesh = elements[column.element];
     return <mesh
       key={`column_${column.id}`}
@@ -521,30 +529,7 @@ function buildColumns(elements, structure) {
   });
 }
 
-function buildCrossbars(elements, structure) {
-  return structure.crossbars.map((cb) => {
-    const { columns, type, side, element } = cb;
-
-    const baseColumn = structure.columns[columns[0]];
-    const config = structure.transforms[`${type}_${side}`];
-    const [x, z, y] = config.position;
-    const pos = [
-      unitSide * baseColumn.position[0] + x,
-      unitHeight + z,
-      unitSide * baseColumn.position[1] + y,
-    ];
-    const mesh = elements[element];
-    return <mesh
-      key={`crossbar_${cb.id}`}
-      position={pos}
-      rotation={transformRotation(config.rotation)}
-      geometry={mesh.geometry}
-      material={mesh.material}
-    />;
-  });
-}
-
-function buildCrossbars1(elements, structure) {
+const buildCrossbars = (elements, structure, index) => {
   return structure.crossbars1.map((cb) => {
     const { columns, columnType, direction, moveType, element } = cb;
 
@@ -554,7 +539,7 @@ function buildCrossbars1(elements, structure) {
       const [x, z, y] = config.position;
       const pos = [
         unitSide * baseColumn.position[0] + x,
-        unitHeight + z,
+        unitHeight + (unitHeight + crossbarSide) * index + z,
         unitSide * baseColumn.position[1] + y,
       ];
       const mesh = elements[element];
@@ -569,7 +554,7 @@ function buildCrossbars1(elements, structure) {
       return <></>;
     }
   });
-}
+};
 
 const assembleElements = (model) => {
   return model.scenes.reduce((acc, scene) => {

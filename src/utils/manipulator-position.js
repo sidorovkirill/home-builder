@@ -7,7 +7,7 @@ import {unitSide, crossbarSide, unitHeight} from 'constants/construction-paramet
 
 const offsetFromManipulationFaces = 0.01;
 
-export const calculateManipulatorPosition = (columns, selectedFaces, actualSide) => {
+export const calculateManipulatorPosition = (columns, selectedFaces, actualSide, floor) => {
   if (actualSide) {
     console.log('selectedFaces', selectedFaces);
     const activeColumns = columns.filter((item) => selectedFaces.find((sel) => item.id === sel.columnid));
@@ -33,13 +33,13 @@ export const calculateManipulatorPosition = (columns, selectedFaces, actualSide)
       return [
         minX * unitSide + ((maxX - minX) + 1) * unitSide / 2 + ox,   // x
         (moveType === MoveTypes.MINUS ? minY : maxY) * unitSide + oy,// y
-        oz,                                                          // z
+        oz + (unitHeight + crossbarSide) * (floor - 1),                                                          // z
       ];
     } else if (direction === DirectionTypes.AGAINST) {
       return [
         (moveType === MoveTypes.MINUS ? maxX : minX) * unitSide + ox,// x
         minY * unitSide + ((maxY - minY) + 1) * unitSide / 2 + oy,   // y
-        oz,                                                          // z
+        oz + (unitHeight + crossbarSide) * (floor - 1),                                                          // z
       ];
     }
   } else {

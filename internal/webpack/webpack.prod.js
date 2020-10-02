@@ -94,12 +94,12 @@ module.exports = require('./webpack.base')({
       inject: true,
     }),
 
-    new CompressionPlugin({
-      algorithm: 'gzip',
-      test: /\.js$|\.css$|\.html$/,
-      threshold: 10240,
-      minRatio: 0.8,
-    }),
+    // new CompressionPlugin({
+    //   algorithm: 'gzip',
+    //   test: /\.js$|\.css$|\.html$/,
+    //   threshold: 10240,
+    //   minRatio: 0.8,
+    // }),
 
     new HashedModuleIdsPlugin({
       hashFunction: 'sha256',
