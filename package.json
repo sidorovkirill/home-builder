@@ -10,7 +10,7 @@
     "build:clean": "rimraf ./build",
     "lint:staged": "lint-staged",
     "lint:eslint": "eslint --ignore-path .gitignore",
-    "server": "live-server --port=80 build/"
+    "server": "http-server build/ -p 80"
   },
   "lint-staged": {
     "*.js": "yarn lint:eslint"
@@ -63,9 +63,9 @@
     "express": "^4.17.1",
     "html-loader": "^1.1.0",
     "html-webpack-plugin": "^4.3.0",
+    "http-server": "^0.12.3",
     "image-webpack-loader": "^6.0.0",
     "lint-staged": "^10.2.10",
-    "live-server": "^1.2.1",
     "prettier": "^2.0.5",
     "react-hot-loader": "^4.12.21",
     "rimraf": "^3.0.2",
